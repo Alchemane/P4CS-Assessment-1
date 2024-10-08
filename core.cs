@@ -5,14 +5,14 @@ using System.Text; // Importing StringBuilder
 // Class Menu is the access point for the program and contains Main method with prompt, pointing to the other mini-app Classes
 public class Menu
 {
+    // Main method runs the top-level menu, giving options to run different mini-apps
     public static void Main(string[] args)
     {
         // While loop using boolean control, allows for continuous prompts when incorrect prompt input
         bool exit = false;
         while (!exit)
         {
-            Console.WriteLine("hi");
-            // Verbatim used to reduce amount of print statements
+            // Using a verbatim string for multi-line menu options
             Console.WriteLine(@"Select an option:
             1. Run Energy Calculator
             2. Manage Products List
@@ -49,7 +49,7 @@ public class Menu
 
 public class ProductsList
 {
-    private List<Product> products = new List<Product>(); // List with data type <Product> as in struct
+    private List<Product> products = new List<Product>(); // List with data type <Product> as in the class Product
 
     public void RunProductList()
     {
@@ -69,10 +69,10 @@ public class ProductsList
                     AddProduct(); // Add to the products list
                     break;
                 case "2":
-                    ListProducts(); // See all items of products list
+                    ListProducts(); // Display all products in the list
                     break;
                 case "3":
-                    exit = true; // Breaks while loop
+                    exit = true; // Exit the product list manager
                     Console.WriteLine("Exiting the program."); // Natural exit from products list app back into the top level menu
                     break;
                 default:
@@ -111,17 +111,36 @@ public class ProductsList
 
     public static double ValidateInput(string prompt) // Essential for ensuring correct input to products list
     {
-        double value;
-        Console.WriteLine(prompt);
-        while (!double.TryParse(Console.ReadLine(), out value) || value <= 0) // Ensuring double data type and within range
+        while (!validInput) // Loop until valid input is provided by the user
         {
-            Console.WriteLine("Invalid input. Please enter a valid positive number.");
+            try
+            {
+                Console.WriteLine(prompt);
+                value = Convert.ToDouble(Console.ReadLine()); // Attempt to convert user input to a double
+
+                if (value <= 0 || value > max) // Check if the input is within the acceptable range
+                {
+                    // Throw exception if the value is out of specified range
+                    throw new ArgumentOutOfRangeException($"Value must be between 0 and {max}.");
+                }
+                validInput = true; // Input is valid, exit the loop
+            }
+            catch (FormatException)
+            {
+                // Catch block to handle invalid format (non numeric input)
+                Console.WriteLine("Invalid format. Please enter a number.");
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                // Catch block to handle out of range inputs and display the appropriate message
+                Console.WriteLine(ex.Message);
+            }
         }
-        return value;
+        return value; // Return the valid numeric input
     }
 }
 
-public class Product // Product Structure
+public class Product // Product Class
 {
     // Auto-Implemented Property; Getter and Setter with backing field managed by compiler
     public string Name { get; set; }
@@ -141,14 +160,15 @@ public class CharacterEncoder
     public void RunCharacterEncoder()
     {
         Console.WriteLine("Enter a string to encode:");
-        string input = Console.ReadLine().ToUpper();
-        string encoded = EncodeString(input); // Passing input through to encoder method
+        string input = Console.ReadLine().ToUpper(); // Convert input to uppercase for uniform encoding
+        string encoded = EncodeString(input); // Encode the input string
         Console.WriteLine($"Encoded string: {encoded}");
     }
 
     public static string EncodeString(string input)
     {
         // Dictionary with Alphabet as Key and binary encodings as Value
+        // Maps each letter to its corresponding binary encoding
         Dictionary<char, string> encodingMap = new Dictionary<char, string>
         {
             {'A', "00001"}, {'B', "00010"}, {'C', "00011"}, {'D', "00100"}, {'E', "00101"},
@@ -159,19 +179,19 @@ public class CharacterEncoder
             {'Z', "11010"}
         };
 
-        StringBuilder encodedString = new StringBuilder(); // Dynamic string manipulation
+        StringBuilder encodedString = new StringBuilder(); // Efficient string manipulation
         foreach (char c in input)
         {
             if (encodingMap.ContainsKey(c)) // Encode each letter from user input using foreach loop
             {
-                encodedString.Append(encodingMap[c] + " ");
+                encodedString.Append(encodingMap[c] + " ");  // Append encoded letter with space separator
             }
-            else if (char.IsLetter(c)) // Non Alphabetic characters considered as invalid
+            else if (char.IsLetter(c))
             {
-                encodedString.Append("Invalid ");
+                encodedString.Append("Invalid "); // Mark non-alphabetic characters as invalid
             }
         }
-        return encodedString.ToString().Trim();
+        return encodedString.ToString().Trim(); // Remove any trailing spaces
     }
 }
 
@@ -218,7 +238,7 @@ public class EnergyCalculator
         double hoursUsed = ValidateInput("Enter the hours used per day:", 24);
 
         // Return an Appliance object
-        return new Appliance(name, powerRating, hoursUsed); // Returns instance of Appliance Structure using user input
+        return new Appliance(name, powerRating, hoursUsed); // Returns instance of Appliance class using user input
     }
 
     // Method to validate numeric input
@@ -226,7 +246,8 @@ public class EnergyCalculator
     {
         double value;
         Console.WriteLine(prompt);
-        while (!double.TryParse(Console.ReadLine(), out value) || value <= 0 || value > max) // TryParse attempts to convert user input to double
+        // Try to parse user input and ensure it is within the valid range as in 24 hours for days
+        while (!double.TryParse(Console.ReadLine(), out value) || value <= 0 || value > max)
         {
             Console.WriteLine("Invalid input. Please enter a valid positive number."); // None negative number only
         }
@@ -241,18 +262,19 @@ public class EnergyCalculator
             Monthly Energy Usage = Daily Energy Usage x 30
             Yearly Energy Usage = Daily Energy Usage x 365
         */
+        // Energy usage calculations based on daily usage, then extrapolated to monthly and yearly usage
         double dailyUsage = appliance.PowerRating * appliance.HoursUsed;
-        double monthlyUsage = dailyUsage * 30;
-        double yearlyUsage = dailyUsage * 365;
+        double monthlyUsage = dailyUsage * 30; // Approximate monthly usage (30 days)
+        double yearlyUsage = dailyUsage * 365; // Approximate yearly usage (365 days)
 
-        // Display the results
+        // Display the results to the user
         Console.WriteLine($"\nThe daily energy usage for your {appliance.Name} is: {dailyUsage} kWh\n" +
                   $"Its monthly energy usage is: {monthlyUsage} kWh\n" +
                   $"Its yearly energy usage is: {yearlyUsage} kWh");
     }
 }
 
-public class Appliance // Appliance Structure
+public class Appliance // Appliance Class
 {
     // Auto-Implemented Property; Getter and Setter with backing field managed by compiler
     public string Name { get; set; }
