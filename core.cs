@@ -45,12 +45,12 @@ public class Menu
         bool exit = false;
         while (!exit)
         {
-            // Using a verbatim string for multi-line menu options
-            Console.WriteLine(@"Select an option:
-            1. Run Energy Calculator
-            2. Manage Products List
-            3. Run Character Encoder
-            4. Quit");
+            Console.WriteLine("\n" +
+                "Select an option:\n" +
+                "1. Run Energy Calculator\n" +
+                "2. Manage Products List\n" +
+                "3. Run Character Encoder\n" +
+                "4. Quit"); // String concatenation for convenience
 
             string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
             switch (choice)
@@ -143,11 +143,10 @@ public class EnergyCalculator
         bool exit = false;
         while (!exit)
         {
-            // Verbatim used to reduce amount of print statements
-            Console.WriteLine(@"
-            Energy Calculator:
-            1. Calculate energy usage
-            2. Quit"); // Reason for this menu option is to continuously add numerous products without exiting unless user states
+            Console.WriteLine("\n" + 
+            "Energy Calculator:\n" +
+            "1. Calculate energy usage\n" +
+            "2. Quit"); // Reason for this menu option is to continuously add numerous products without exiting unless user states
 
             string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
             switch (choice) // Switch statement for limited options
@@ -167,145 +166,29 @@ public class EnergyCalculator
         }
     }
 
-    public Appliance GetApplianceData()
+    private Appliance GetApplianceData() // Privatised and encapuslated as is only used by this class.
     {
-        // Dictionary of categories with appliances, using key pair values for categories and its appliances, used for checking available appliance names
-        Dictionary<string, List<string>> applianceCategories = new Dictionary<string, List<string>>()
-        {
-            { "Kitchen Appliances", new List<string> 
-                { 
-                    "Kettle", "Toaster", "Microwave", "Fridge", "Refrigerator", "Freezer", "Dishwasher", 
-                    "Oven", "Convection Oven", "Stove", "Cooktop", "Blender", "Coffee Maker", 
-                    "Espresso Machine", "Rice Cooker", "Pressure Cooker", "Slow Cooker", "Food Processor", 
-                    "Air Fryer", "Juicer", "Mixer", "Stand Mixer", "Toaster Oven", "Grill", 
-                    "Indoor Electric Grill", "Deep Fryer", "Ice Cream Maker" 
-                } 
-            },
-            { "Laundry & Cleaning Appliances", new List<string> 
-                { 
-                    "Washing Machine", "Dryer", "Tumble Dryer", "Vacuum Cleaner", "Robot Vacuum", 
-                    "Steam Cleaner", "Iron", "Garment Steamer", "Clothes Steamer" 
-                } 
-            },
-            { "Heating & Cooling Appliances", new List<string> 
-                { 
-                    "Heater", "Space Heater", "Air Conditioner", "Fan", "Ceiling Fan", "Portable Fan", 
-                    "Humidifier", "Dehumidifier", "Air Purifier" 
-                } 
-            },
-            { "Entertainment & Media Appliances", new List<string> 
-                { 
-                    "Television", "TV", "Sound System", "DVD Player", "Blu-ray Player", 
-                    "Streaming Device", "Apple TV", "Chromecast", "Game Console", 
-                    "PlayStation", "Xbox", "Nintendo Switch", "Radio", "Projector" 
-                } 
-            },
-            { "Personal Care Appliances", new List<string> 
-                { 
-                    "Hair Dryer", "Electric Toothbrush", "Hair Straightener", "Flat Iron", 
-                    "Hair Curler", "Electric Shaver", "Razor", "Massage Chair", "Facial Steamer" 
-                } 
-            },
-            { "Lighting & Home Maintenance", new List<string> 
-                { 
-                    "Lamp", "Table Lamp", "Floor Lamp", "Chandelier", "Torch", 
-                    "Flashlight", "LED Light Strip" 
-                } 
-            },
-            { "Office & Miscellaneous Appliances", new List<string> 
-                { 
-                    "Printer", "Scanner", "Computer Monitor", "Electric Fan Heater", 
-                    "Paper Shredder" 
-                } 
-            },
-            { "Outdoor & Garden Appliances", new List<string> 
-                { 
-                    "Electric Lawn Mower", "Hedge Trimmer", "Leaf Blower", "Pressure Washer", 
-                    "Garden Sprinkler System" 
-                } 
-            },
-            { "Other Household Appliances", new List<string> 
-                { 
-                    "Electric Blanket", "Sewing Machine", "Water Dispenser", 
-                    "Electric Fireplace", "Heated Towel Rail" 
-                } 
-            }
-        };
+        /* Dictionary of categories with appliances, using key pair values for categories and its appliances, used for checking available appliance names
+        using our data provider class dedicated for storing our products and categories */
+        Dictionary<string, List<string>> applianceCategories = ProductDataProvider.GetApplianceCategories();
 
-        // Create a HashSet to store all valid appliance names for efficient lookup (case-insensitive)
-        HashSet<string> validApplianceNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        // iterate through each list of appliances in categories to populate HashSet
-        foreach (var appliances in applianceCategories.Values)//loop through each categorys appliance list
+        // Step 1: Select a category
+        string selectedCategory = Utilities.SelectCategory(applianceCategories);
+        if (selectedCategory == null)
         {
-            foreach (var appliance in appliances) // Loop through individual appliances within the list
-            {
-                validApplianceNames.Add(appliance);//Add each appliance to HashSet to build a complete collection
-            }
+            Console.WriteLine("Exiting the Energy Calculator.");
+            return null;
         }
 
-        bool exit = false;
-        string name = ""; // has to be initialised empty
+        // Step 2: Select an appliance from the chosen category
+        string applianceName = Utilities.SelectProduct(selectedCategory, applianceCategories);
 
-        // Main loop for choosing options continuously
-        while (!exit)
-        {
-            Console.WriteLine(@"
-                Please select a choice:
-                1. Continue to enter appliance name
-                2. List available appliance names by category
-                3. Exit");
+        // Step 3: Get and validate the power rating and hours used
+        double powerRating = Utilities.ValidateInput("Enter the power rating (in kWh):");
+        double hoursUsed = Utilities.ValidateInput("Enter the hours used per day (out of 24):", 24);
 
-            string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
-            switch (choice)
-            {
-                case "1": // Continue - ask for the name of the appliance
-                    bool validName = false;
-
-                    while (!validName) // Re-prompt the user if the input name is invalid
-                    {
-                        Console.WriteLine("Enter the appliance name (e.g., Kettle, Fridge):");
-                        name = Console.ReadLine();
-
-                        if (validApplianceNames.Contains(name)) // Does hashset contain user-inputted appliance name?
-                        {
-                            validName = true; // Name is valid, exit loop
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid appliance name. Please enter a valid appliance from the list or type '1' to view available appliances.");
-                            string response = Console.ReadLine().Trim().ToLower();
-                            if (response == "1") // Helps user find the appliance they need if incorrect appliance name is inputted
-                            {
-                                ListAppliancesByCategory(applianceCategories); //Call function for listing appliance by category
-                            }
-                        }
-                    }
-                    exit = true; // Once a valid name is entered, exit the main loop to proceed with other inputs
-                    break;
-
-                case "2": // Ask for appliance category to list and then list the supported appliance names
-                    ListAppliancesByCategory(applianceCategories);
-                    break;
-
-                case "3": // Exit the appliance selection process
-                    exit = true;
-                    Console.WriteLine("Exiting the Energy Calculator.");
-                    return null; // Exit the method
-
-                default: // Handle invalid input
-                    Console.WriteLine("Invalid option, please try again.");
-                    break;
-            }
-        }
-
-        // Get and validate the power rating
-        double powerRating = ValidateInput("Enter the power rating (in kWh):");
-
-        // Get and validate the hours used per day, passing in 24 for maximum hours for a day
-        double hoursUsed = ValidateInput("Enter the hours used per day, ensure it is no higher than 24 hours:", 24);
-
-        // Return an Appliance object
-        return new Appliance(name, powerRating, hoursUsed); // Returns instance of Appliance class using user input
+        // Step 4: Return the appliance object
+        return new Appliance(applianceName, powerRating, hoursUsed);
     }
 
     /*
@@ -331,7 +214,7 @@ public class EnergyCalculator
     */
 
     // Function for listing appliances by category, encapsulated
-    private void ListAppliancesByCategory(Dictionary<string, List<string>> applianceCategories)
+    private void ListAppliancesByCategory(Dictionary<string, List<string>> applianceCategories) // Privatised and encapuslated as is only used by this class.
     {
         Console.WriteLine("Select an appliance category to view available appliances:");
 
@@ -364,7 +247,7 @@ public class EnergyCalculator
                     string selectedCategory = indexToCategoryMap[categoryChoice];
                     Console.WriteLine($"Available appliances in {selectedCategory}:");
 
-                    // Listing all appliances in selected category
+                    //Listing all appliances in selected category
                     foreach (string appliance in applianceCategories[selectedCategory])
                     {
                         Console.WriteLine($"- {appliance}");
@@ -379,7 +262,7 @@ public class EnergyCalculator
             }
             catch (ArgumentException ex)
             {
-                // Handling cases where user input is outside of expected range
+                //handling cases where user input is outside of expected range
                 Console.WriteLine(ex.Message);
             }
             catch (Exception ex)
@@ -390,21 +273,8 @@ public class EnergyCalculator
         }
     }
 
-    //Method to validate numeric input, private as not necessary to be called outside this class
-    private double ValidateInput(string prompt, double max = double.MaxValue) // Optional parameter max ensures hour value not exceeding 24
-    {
-        double value;
-        Console.WriteLine(prompt);
-        // Try to parse user input and ensure it is within the valid range as in 24 hours for days
-        while (!double.TryParse(Console.ReadLine(), out value) || value <= 0 || value > max)
-        {
-            Console.WriteLine("Invalid input. Please enter a valid positive number."); // None negative number only
-        }
-        return value;
-    }
-
     // Method to calculate and display the energy usage
-    public void CalculateEnergyUsage(Appliance appliance)
+    private void CalculateEnergyUsage(Appliance appliance) // Privatised and encapuslated as is only used by this class.
     {
         /*
             Daily Energy Usage = power rating x hours used per day
@@ -525,11 +395,11 @@ public class ProductsList // Has a similar feature as the top level menu with ca
         bool exit = false;
         while (!exit)
         {
-            Console.WriteLine(@"
-            Select an option:
-            1. Create a list of products
-            2. List product details
-            3. Quit");
+            Console.WriteLine("\n" +
+            "Select an option:\n" +
+            "1. Create a list of products\n" +
+            "2. List product details\n" +
+            "3. Quit");
 
             string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
             switch (choice)
@@ -551,53 +421,89 @@ public class ProductsList // Has a similar feature as the top level menu with ca
         }
     }
 
-    public void AddProduct()
+    private void AddProduct() // Privatised and encapsulated as is only used by this class.
     {
-        Console.WriteLine(@"Select a product category:
-            1. Fruit & Vegetables
-            2. Bakery
-            3. Dairy
-            4. Quit");
+        // Dictionary for product categories and available items within those categories using our dedicated class for dictionary data
+        Dictionary<string, List<string>> productCategories = ProductDataProvider.GetProductCategories();
 
-        string category = "";
-        bool validCategory = false;
-
-        while (!validCategory)
+        // Step 1: select a category
+        string selectedCategory = Utilities.SelectCategory(productCategories);
+        if (selectedCategory == null)
         {
-            string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
-            switch (choice)
-            {
-                case "1":
-                    category = "Fruit & Vegetables";
-                    validCategory = true;
-                    break;
-                case "2":
-                    category = "Bakery";
-                    validCategory = true;
-                    break;
-                case "3":
-                    category = "Dairy";
-                    validCategory = true;
-                    break;
-                case "4":
-                    // Exit the AddProduct method without adding a product
-                    Console.WriteLine("Exiting product addition.");
-                    return; // Exits the method entirely
-                default:
-                    Console.WriteLine("Invalid category selection. Please select again.");
-                    break;
-            }
+            Console.WriteLine("Exiting product addition.");
+            return;
         }
 
-        Console.WriteLine("Enter the product name:");
-        string name = Console.ReadLine();
+        // step 2: select a product from chosen category
+        string productName = Utilities.SelectProduct(selectedCategory, productCategories);
 
-        double price = ValidateInput("Enter the cost of one unit:"); // Pass user input directly into the ValidateInput function
-        // Type cast to int and ensure isQuantity is true for additional validation layer
-        int quantity = (int)ValidateInput("Enter the quantity of items:", true);
+        // step 3: get and validate price and quantity
+        double price = Utilities.ValidateInput("Enter the cost of one unit:");
+        int quantity = (int)Utilities.ValidateInput("Enter the quantity of items:", double.MaxValue, true);
 
-        products.Add(new Product(name, price, quantity, category)); // Append new product to list
+        // Step 4: add new product to list
+        products.Add(new Product(productName, price, quantity, selectedCategory));
         Console.WriteLine("Product added successfully!");
+    }
+
+    // Function for listing products by category
+    private void ListProductsByCategory(Dictionary<string, List<string>> productCategories) // Privatised and encapsulated as is only used by this class.
+    {
+        Console.WriteLine("Select a product category to view available products:");
+
+        int index = 1; // Index counter for displaying available categories
+        Dictionary<int, string> indexToCategoryMap = new Dictionary<int, string>();
+
+        foreach (var category in productCategories.Keys) // Iterating through product categories to display them to user
+        {
+            Console.WriteLine($"{index}. {category}"); // Displaying category with numeric index
+            indexToCategoryMap.Add(index, category);  // Map index to category name
+            index++;
+        }
+        Console.WriteLine($"{index}. Exit to previous menu"); //adding an option to exit back to the previous menu
+
+        int categoryChoice = 0; // Variable to store the user's category choice
+        while (true) // Loop to get valid input from the user until they choose to exit or select a valid category
+        {
+            try
+            {
+                // Parsing user input and ensuring selection is valid
+                if (int.TryParse(Console.ReadLine(), out categoryChoice) && categoryChoice >= 1 && categoryChoice <= indexToCategoryMap.Count + 1)
+                {
+                    if (categoryChoice == indexToCategoryMap.Count + 1)  // Handling the exit case when user chooses the last option to return to the previous menu
+                    {
+                        Console.WriteLine("Returning to the previous menu.");
+                        break; // Exit category selection loop and return to calling function
+                    }
+
+                    // Retrieving selected category name using the mapping dictionary
+                    string selectedCategory = indexToCategoryMap[categoryChoice];
+                    Console.WriteLine($"Available products in {selectedCategory}:");
+
+                    //Listing all products in selected category
+                    foreach (string product in productCategories[selectedCategory])
+                    {
+                        Console.WriteLine($"- {product}");
+                    }
+                    break; // After listing products, break and return to main menu
+                }
+                else
+                {
+                    //throwing an exception if user provides an invalid input
+                    throw new ArgumentException("Invalid selection. Please select a valid category number.");
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                // Handling cases where user input is outside of expected range
+                Console.WriteLine(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                // Generic exception handler for unexpected errors
+                Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+            }
+        }
     }
 
     /*
@@ -621,7 +527,7 @@ public class ProductsList // Has a similar feature as the top level menu with ca
     Actual output: "Invalid option, please try again."
     Result: pass
     */
-    public void ListProducts()
+    private void ListProducts() // Privatised and encapuslated as is only used by this class.
     {
         if (products.Count == 0)
         {
@@ -630,44 +536,39 @@ public class ProductsList // Has a similar feature as the top level menu with ca
         }
 
         string selectedCategory = "";
-        bool exit = false;
-        while (!exit)
+        while (true)
         {
-            Console.WriteLine(@"
-            Please select a category:
-            1. Fruit & Vegetables
-            2. Bakery
-            3. Dairy
-            4. All
-            5. Exit");
+            Console.WriteLine("\n" +
+            "Please select a category:\n" +
+            "1. Fruit & Vegetables\n" +
+            "2. Bakery\n" +
+            "3. Dairy\n" +
+            "4. All\n" +
+            "5. Exit");
             string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
 
             switch (choice)
             {
                 case "1":
                     selectedCategory = "Fruit & Vegetables"; //Assign our category
-                    exit = true; // breaks the for loop
                     break;
                 case "2":
                     selectedCategory = "Bakery";
-                    exit = true;
                     break;
                 case "3":
                     selectedCategory = "Dairy";
-                    exit = true;
                     break;
                 case "4":
                     selectedCategory = "All";
-                    exit = true;
                     break;
                 case "5":
-                    exit = true; // Exit naturally
                     Console.WriteLine("Returning to the menu...");
                     return;
                 default: // Because we're in the while loop, allows for continuous prompting.
                     Console.WriteLine("Invalid option, please try again.");
-                    break;
+                    continue; // Skip the rest of the loop and re-prompt
             }
+            break; // Exit the loop once a valid category is selected
         }
         // Filter products by category if a specific category is selected
         List<Product> filteredProducts = new List<Product>();
@@ -711,51 +612,6 @@ public class ProductsList // Has a similar feature as the top level menu with ca
             Console.WriteLine($"\nTotal number of items: {totalQuantity}");
             Console.WriteLine($"Total cost of items: £{totalCost:F2}");
         }
-    }
-
-    /* Essential method for validating user input is correct and sanitised. max not used but there for robustness and modularity. 
-    isQuantity defaulted to false as is not needed unless quantity is used, which we'll explicitly state.
-    Method to validate user input, private as not necessary to be called outside this class */
-    private static double ValidateInput(string prompt, bool isQuantity = false, double max = double.MaxValue)
-    {
-        bool validInput = false; // repeats our loop until valid input present using boolean value
-        double value = 0;
-        while (!validInput) // Loop until valid input is provided by the user
-        {
-            try // capture expected errors and display error to user. prevents runtime errors that interfere the programs run.
-            {
-                Console.WriteLine(prompt);
-                value = Convert.ToDouble(Console.ReadLine()); // Attempt to convert user input to a double
-
-                if (value <= 0 || value > max) // Check if the input is within the acceptable range
-                {
-                    // Throw exception if the value is out of specified range
-                    throw new ArgumentOutOfRangeException($"Value must be between 0 and {max}.");
-                }
-                // If validating quantity, ensure that the value is a whole number
-                if (isQuantity && value % 1 != 0)
-                {
-                    throw new ArgumentException("Quantity must be a whole number. Please enter a valid quantity.");
-                }
-                validInput = true; // Input is valid, exit the loop
-            }
-            catch (FormatException)
-            {
-                // Catch block to handle invalid format (non numeric input)
-                Console.WriteLine("Invalid format. Please enter a number.");
-            }
-            catch (ArgumentOutOfRangeException ex)
-            {
-                // Catch block to handle out of range inputs and display the appropriate message
-                Console.WriteLine(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                // Catch block to handle non-whole numbers for quantity
-                Console.WriteLine(ex.Message);
-            }
-        }
-        return value; // Return the valid numeric input
     }
 }
 
@@ -838,10 +694,10 @@ public class CharacterEncoder
         while (!exit)
         {
             // Presenting the user with options to encode or exit
-            Console.WriteLine(@"
-            Character Encoder:
-            1. Encode a string
-            2. Quit");
+            Console.WriteLine("\n" +
+            "Character Encoder:\n" +
+            "1. Encode a string\n" +
+            "2. Quit");
 
             string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
 
@@ -874,7 +730,7 @@ public class CharacterEncoder
         }
     }
 
-    public static string EncodeString(string input)
+    private static string EncodeString(string input) // Privatised and encapuslated as is only used by this class.
     {
         // Dictionary with Alphabet as Key and binary encodings as Value
         // Maps each letter to its corresponding binary encoding
@@ -901,5 +757,171 @@ public class CharacterEncoder
             }
         }
         return encodedString.ToString().Trim(); // Remove any trailing spaces
+    }
+}
+
+public static class Utilities
+{
+    /* Method to validate numeric input with optional constraints for maximum value and checking if the input should be a whole number.
+    prompt parameter specifies the message to be displayed to the user.
+    max parameter is an optional constraint for the maximum allowed value (default is double.MaxValue).
+    requiresWholeNum parameter, when true, ensures that the input is a whole number (e.g., for quantities). */
+    public static double ValidateInput(string prompt, double max = double.MaxValue, bool requiresWholeNum = false)
+    {
+        bool validInput = false; // flag to track if valid input is obtained
+        double value = 0; // variable to store the user input value
+        
+        while (!validInput) // loop until valid input is provided by the user
+        {
+            try
+            {
+                Console.WriteLine(prompt); // prompt the user for input and convert it to a double
+                value = Convert.ToDouble(Console.ReadLine());
+                // check if the value is within the specified range (greater than 0 and less than or equal to the max value)
+                if (value <= 0 || value > max)
+                {
+                    // Throw exception if value is not within the specified range
+                    throw new ArgumentOutOfRangeException($"Value must be between 0 and {max}.");
+                }
+
+                // If the value should be a whole number (e.g., quantity), check for modular arithmetic to see if there's a fraction
+                if (requiresWholeNum && value % 1 != 0) // use of modular arithmetic
+                {
+                    throw new ArgumentException("Value must be a whole number.");
+                }
+
+                validInput = true; // Exit the loop when the input is valid
+            }
+            catch (FormatException)
+            { // handle the case where the input cannot be converted to a double
+                Console.WriteLine("Invalid format. Please enter a number.");
+            }
+            catch (ArgumentOutOfRangeException ex)
+            { // handle the case where the input value is out of the specified range
+                Console.WriteLine(ex.Message);
+            }
+            catch (ArgumentException ex)
+            { // handle the case where the value must be a whole number but isn't
+                Console.WriteLine(ex.Message);
+            }
+        }
+        return value; // Return the valid numeric input
+    }
+
+    /* method to select a category from a dictionary of categories provided by the user.
+    The categories parameter is a dictionary of category names and their associated lists.
+    Prompts the user to choose from the available categories or exit.
+    Returns the name of the selected category, or null if the user chooses to exit. */
+    public static string SelectCategory(Dictionary<string, List<string>> categories)
+    {
+        Console.WriteLine("Select a category:");
+
+        int index = 1;
+        Dictionary<int, string> indexToCategoryMap = new Dictionary<int, string>();
+
+        // Display available categories to user
+        foreach (var category in categories.Keys)
+        {
+            Console.WriteLine($"{index}. {category}");
+            indexToCategoryMap[index] = category;
+            index++;
+        }
+        Console.WriteLine($"{index}. Exit");  // Add an option for the user to exit the category selection
+
+        while (true)
+        {
+             // read user input and try to parse it as an integer
+            if (int.TryParse(Console.ReadLine(), out int choice) && choice >= 1 && choice <= indexToCategoryMap.Count + 1)
+            {
+                if (choice == index)// check if the user selected the last option (exit)
+                {
+                    return null; // indicating exit
+                }
+                return indexToCategoryMap[choice]; // return the selected category from the mapping dictionary
+            }
+            else
+            { // if input is invalid, prompt the user again
+                Console.WriteLine("invalid choice. please select a valid category number.");
+            }
+        }
+    }
+
+    /* Method to select a product from a list of available products for a given category.
+    The category parameter is the name of the category from which the user wants to select a product.
+    The productCategories parameter is a dictionary of categories with their associated products.
+    Prompts the user to choose a product from the given category or list the available products again.
+    Returns the name of the selected product if found in the available products list. */
+    public static string SelectProduct(string category, Dictionary<string, List<string>> productCategories)
+    {
+        // get the list of available products for the selected category
+        List<string> availableProducts = productCategories[category];
+        
+        Console.WriteLine($"available products in {category}:"); // display available products to the user
+        foreach (string product in availableProducts)
+        {
+            Console.WriteLine($"- {product}");
+        }
+        while (true) // loop until a valid product selection is made
+        {
+            // prompt the user to enter the product name or type 'list' to see the products again
+            Console.WriteLine("enter the product name (or type 'list' to see available products again):");
+            string productName = Console.ReadLine()?.Trim();
+            // if the user types 'list', display the available products again
+            if (productName.Equals("list", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (string product in availableProducts)
+                {
+                    Console.WriteLine($"- {product}");
+                }
+            }
+            bool productExists = false; // flag to indicate if the entered product name is valid
+            // iterate over available products to check for a match
+            foreach (var product in availableProducts)
+            {
+                if (product.Equals(productName, StringComparison.OrdinalIgnoreCase))
+                {
+                    productExists = true; // set the flag to true if the product name matches
+                    break; // no need to keep iterating once a match is found
+                }
+            }
+            // if the product exists, return it
+            if (productExists)
+            {
+                return productName;
+            }
+            else
+            {
+                // if no valid product name is found, notify the user
+                Console.WriteLine("invalid product name. please enter a valid product from the list.");
+            }
+        }
+    }
+}
+
+public static class ProductDataProvider
+{
+    // Dictionary of categories with available products in each category
+    private static readonly Dictionary<string, List<string>> productCategories = new Dictionary<string, List<string>>()
+    {
+        { "Fruit & Vegetables", new List<string> { "Apple", "Banana", "Orange", "Carrot", "Broccoli", "Potato", "Tomato", "Onion", "Lettuce" } },
+        { "Bakery", new List<string> { "Bread", "Croissant", "Bagel", "Muffin", "Scone", "Cake", "Baguette" } },
+        { "Dairy", new List<string> { "Milk", "Cheese", "Yogurt", "Butter", "Cream", "Ice Cream" } }
+    };
+    // Dictionary of appliance categories with available appliances in each category.
+    private static readonly Dictionary<string, List<string>> applianceCategories = new Dictionary<string, List<string>>()
+    {
+        { "Kitchen Appliances", new List<string> { "Kettle", "Toaster", "Microwave", "Fridge", "Oven", "Blender", "Coffee Maker", "Slow Cooker", "Rice Cooker" } },
+        { "Laundry & Cleaning Appliances", new List<string> { "Washing Machine", "Dryer", "Vacuum Cleaner", "Robot Vacuum", "Steam Cleaner", "Iron" } },
+        { "Heating & Cooling Appliances", new List<string> { "Heater", "Air Conditioner", "Fan", "Humidifier", "Dehumidifier", "Air Purifier" } }
+    };
+    // getter method to get product categories
+    public static Dictionary<string, List<string>> GetProductCategories()
+    {
+        return new Dictionary<string, List<string>>(productCategories);
+    }
+    // getter method to get appliance categories
+    public static Dictionary<string, List<string>> GetApplianceCategories()
+    {
+        return new Dictionary<string, List<string>>(applianceCategories);
     }
 }
