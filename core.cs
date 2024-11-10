@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic; // Importing list
 using System.Text; // Importing StringBuilder for our Encoder
+using System.Linq; // Language Integrated Query (LINQ) Using Any()
 
 /*
 Test Plan for Top Level Menu:
@@ -42,39 +43,55 @@ public class Menu
     public static void Main(string[] args)
     {
         // While loop using boolean control, allows for continuous prompts when incorrect prompt input
-        bool exit = false;
-        while (!exit)
-        {
-            Console.WriteLine("\n" +
-                "Select an option:\n" +
-                "1. Run Energy Calculator\n" +
-                "2. Manage Products List\n" +
-                "3. Run Character Encoder\n" +
-                "4. Quit"); // String concatenation for convenience
+        /* This logic was previously controlled by a boolean variable set to false and the argument for the while loop 
+            was ![variable_name] but this method cut the code down by a few lines. the exit case used a reassignment of the 
+            variable line so [variable_name] = true; but i realised that the ![variable_name] or not false, is essentially 
+            just true, and the while loop could be controlled using a return; statement in case 4 to naturally converge 
+            and end the program from the top level menu. this reduces memory allocation from the removal of loop bool variable, and 
+            the code looks cleaner and more readable, as well as less lines for the same purpose. all other instances of the while
+            loops have utilised the same method as here.
+        */
 
-            string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
-            switch (choice)
+        // top level try catch to catch unexpected errors in our top level menu
+        try
+        {
+            while (true)
             {
-                case "1": // Branch to Energy Calculator
-                    EnergyCalculator energyCalculator = new EnergyCalculator();
-                    energyCalculator.RunEnergyCalculator();
-                    break;
-                case "2": // Branch to Product List
-                    ProductsList productsList = new ProductsList();
-                    productsList.RunProductList();
-                    break;
-                case "3": // Branch to Character Encoder
-                    CharacterEncoder characterEncoder = new CharacterEncoder();
-                    characterEncoder.RunCharacterEncoder();
-                    break;
-                case "4":
-                    exit = true; // Exit naturally
-                    Console.WriteLine("Exiting the program.");
-                    break;
-                default: // Because we're in the while loop, allows for continuous prompting.
-                    Console.WriteLine("Invalid option, please try again.");
-                    break;
+                Console.WriteLine("\n" +
+                    "Select an option:\n" +
+                    "1. Run Energy Calculator\n" +
+                    "2. Manage Products List\n" +
+                    "3. Run Character Encoder\n" +
+                    "4. Quit"); // String concatenation for convenience
+
+                string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
+                switch (choice)
+                {
+                    case "1": // Branch to Energy Calculator
+                        EnergyCalculator energyCalculator = new EnergyCalculator();
+                        energyCalculator.RunEnergyCalculator();
+                        break;
+                    case "2": // Branch to Product List
+                        ProductsList productsList = new ProductsList();
+                        productsList.RunProductList();
+                        break;
+                    case "3": // Branch to Character Encoder
+                        CharacterEncoder characterEncoder = new CharacterEncoder();
+                        characterEncoder.RunCharacterEncoder();
+                        break;
+                    case "4":
+                        Console.WriteLine("Exiting the program.");
+                        return; // Exit naturally
+                    default: // Because we're in the while loop, allows for continuous prompting.
+                        Console.WriteLine("Invalid option, please try again.");
+                        break;
+                }
             }
+        }
+        catch (Exception ex) // Catch any unhandled exceptions
+        {
+            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+            Console.WriteLine("The program will now exit.");
         }
     }
 }
@@ -140,29 +157,35 @@ public class EnergyCalculator
 {
     public void RunEnergyCalculator()
     {
-        bool exit = false;
-        while (!exit)
+        try
         {
-            Console.WriteLine("\n" + 
-            "Energy Calculator:\n" +
-            "1. Calculate energy usage\n" +
-            "2. Quit"); // Reason for this menu option is to continuously add numerous products without exiting unless user states
-
-            string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
-            switch (choice) // Switch statement for limited options
+            while (true)
             {
-                case "1":
-                    Appliance appliance = GetApplianceData();
-                    CalculateEnergyUsage(appliance); // Calculates and returns data regarding appliance
-                    break;
-                case "2":
-                    exit = true; // Exits the app and returns to Main method in Menu class to reprompt top level menu
-                    Console.WriteLine("Exiting the Energy Calculator.");
-                    break;
-                default: // Accounts for invalid options again, with while loop with boolean conditional for reprompting
-                    Console.WriteLine("Invalid option, please try again.");
-                    break;
+                Console.WriteLine("\n" + 
+                "Energy Calculator:\n" +
+                "1. Calculate energy usage\n" +
+                "2. Quit"); // Reason for this menu option is to continuously add numerous products without exiting unless user states
+
+                string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
+                switch (choice) // Switch statement for limited options
+                {
+                    case "1":
+                        Appliance appliance = GetApplianceData();
+                        CalculateEnergyUsage(appliance); // Calculates and returns data regarding appliance
+                        break;
+                    case "2":
+                        // Exits the app and returns to Main method in Menu class to reprompt top level menu
+                        Console.WriteLine("Exiting the Energy Calculator.");
+                        return;
+                    default: // Accounts for invalid options again, with while loop with boolean conditional for reprompting
+                        Console.WriteLine("Invalid option, please try again.");
+                        break;
+                }
             }
+        }
+        catch (Exception ex) // ensure program is stable during runtime, catch and print any unexpected errors
+        {
+            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
     }
 
@@ -170,24 +193,21 @@ public class EnergyCalculator
     {
         /* Dictionary of categories with appliances, using key pair values for categories and its appliances, used for checking available appliance names
         using our data provider class dedicated for storing our products and categories */
-        Dictionary<string, List<string>> applianceCategories = ProductDataProvider.GetApplianceCategories();
-
-        // Step 1: Select a category
+        var applianceCategories = ProductDataProvider.GetApplianceCategories();
+        // select a category
         string selectedCategory = Utilities.SelectCategory(applianceCategories);
         if (selectedCategory == null)
         {
             Console.WriteLine("Exiting the Energy Calculator.");
             return null;
         }
-
-        // Step 2: Select an appliance from the chosen category
+        // select an appliance from the chosen category
         string applianceName = Utilities.SelectProduct(selectedCategory, applianceCategories);
-
-        // Step 3: Get and validate the power rating and hours used
+        // get and validate the power rating and hours used
         double powerRating = Utilities.ValidateInput("Enter the power rating (in kWh):");
         double hoursUsed = Utilities.ValidateInput("Enter the hours used per day (out of 24):", 24);
 
-        // Step 4: Return the appliance object
+        // return the appliance object
         return new Appliance(applianceName, powerRating, hoursUsed);
     }
 
@@ -218,16 +238,11 @@ public class EnergyCalculator
     {
         Console.WriteLine("Select an appliance category to view available appliances:");
 
-        int index = 1; // index counter for displaying available categories
-        Dictionary<int, string> indexToCategoryMap = new Dictionary<int, string>();
+        // using LINQ Select() method to create an indexed list of category objects then turning the list into a dictionary
+        Dictionary<int, string> indexToCategoryMap = applianceCategories.Keys.Select((category, idx) => 
+        new { Index = idx + 1, Category = category }).ToDictionary(x => x.Index, x => x.Category);// creating a mapping from indices to categories
 
-        foreach (var category in applianceCategories.Keys) // Iterating through appliance categories to display them to user
-        {
-            Console.WriteLine($"{index}. {category}"); // displaying category with numeric index
-            indexToCategoryMap.Add(index, category);  // Map index to category name
-            index++;
-        }
-        Console.WriteLine($"{index}. Exit to previous menu"); // Adding an option to exit back to the previous menu
+        Console.WriteLine($"{indexToCategoryMap.Count + 1}. Exit to previous menu"); // Adding an option to exit back to the previous menu
 
         int categoryChoice = 0; // Variable to store the users category choice
         while (true) // loop to get valid input from the user until they choose to exit or select valid category
@@ -392,56 +407,59 @@ public class ProductsList // Has a similar feature as the top level menu with ca
 
     public void RunProductList()
     {
-        bool exit = false;
-        while (!exit)
+        try
         {
-            Console.WriteLine("\n" +
-            "Select an option:\n" +
-            "1. Create a list of products\n" +
-            "2. List product details\n" +
-            "3. Quit");
-
-            string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
-            switch (choice)
+            while (true)
             {
-                case "1":
-                    AddProduct(); // Add to the products list
-                    break;
-                case "2":
-                    ListProducts(); // Display all products in the list
-                    break;
-                case "3":
-                    exit = true; // Exit the product list manager
-                    Console.WriteLine("Exiting the program."); // Natural exit from products list app back into the top level menu
-                    break;
-                default:
-                    Console.WriteLine("Invalid option, please try again."); // Reprompting as in while loop
-                    break;
+                Console.WriteLine("\n" +
+                "Select an option:\n" +
+                "1. Create a list of products\n" +
+                "2. List product details\n" +
+                "3. Quit");
+
+                string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
+                switch (choice)
+                {
+                    case "1":
+                        AddProduct(); // Add to the products list
+                        break;
+                    case "2":
+                        ListProducts(); // Display all products in the list
+                        break;
+                    case "3":
+                        Console.WriteLine("Exiting the program."); // Natural exit from products list app back into the top level menu
+                        return;
+                    default:
+                        Console.WriteLine("Invalid option, please try again."); // Reprompting as in while loop
+                        break;
+                }
             }
+        }
+        catch (Exception ex) // ensure every part of the program is stable during runtime, catch and print any unexpected errors
+        {
+            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
     }
 
     private void AddProduct() // Privatised and encapsulated as is only used by this class.
     {
         // Dictionary for product categories and available items within those categories using our dedicated class for dictionary data
-        Dictionary<string, List<string>> productCategories = ProductDataProvider.GetProductCategories();
-
-        // Step 1: select a category
+        var productCategories = ProductDataProvider.GetProductCategories();
+        // select a category
         string selectedCategory = Utilities.SelectCategory(productCategories);
         if (selectedCategory == null)
         {
             Console.WriteLine("Exiting product addition.");
             return;
         }
-
-        // step 2: select a product from chosen category
+        // select a product from chosen category
         string productName = Utilities.SelectProduct(selectedCategory, productCategories);
 
-        // step 3: get and validate price and quantity
+        // get and validate price and quantity
         double price = Utilities.ValidateInput("Enter the cost of one unit:");
         int quantity = (int)Utilities.ValidateInput("Enter the quantity of items:", double.MaxValue, true);
 
-        // Step 4: add new product to list
+        // add new product to list
         products.Add(new Product(productName, price, quantity, selectedCategory));
         Console.WriteLine("Product added successfully!");
     }
@@ -534,7 +552,6 @@ public class ProductsList // Has a similar feature as the top level menu with ca
             Console.WriteLine("No products available.");
             return;
         }
-
         string selectedCategory = "";
         while (true)
         {
@@ -570,17 +587,10 @@ public class ProductsList // Has a similar feature as the top level menu with ca
             }
             break; // Exit the loop once a valid category is selected
         }
-        // Filter products by category if a specific category is selected
-        List<Product> filteredProducts = new List<Product>();
-        // If "All" is selected, show all products; otherwise, filter by the selected category
-        if (selectedCategory != "All")
-        {
-            filteredProducts = products.FindAll(p => p.Category == selectedCategory);
-        }
-        else
-        {
-            filteredProducts = products;
-        }
+        /* Filter products by category if a specific category is selected
+            If "All" is selected, show all products; otherwise, filter by the selected category */
+        List<Product> filteredProducts = selectedCategory == "All" ? products.ToList() 
+        : products.Where(p => p.Category == selectedCategory).ToList();
 
         // Displaying product details selected category
         if (filteredProducts.Count == 0) // No products found in the selected category
@@ -589,25 +599,12 @@ public class ProductsList // Has a similar feature as the top level menu with ca
         }
         else
         {
-            double totalCost = 0;
-            int totalQuantity = 0;
-
-            Console.WriteLine($"\nCategory: {selectedCategory}"); //print the category name
-            Console.Write("Items: ");
-
-            // Use a for loop to print each products name, adding a comma only when its not the last element
-            for (int i = 0; i < filteredProducts.Count; i++)
-            {
-                Console.Write(filteredProducts[i].Name);
-                if (i < filteredProducts.Count - 1)
-                {
-                    Console.Write(", ");// Add comma between items, but not after the last one
-                }
-
-                // Calculating total cost and quantity inside the loop
-                totalCost += filteredProducts[i].Price * filteredProducts[i].Quantity;
-                totalQuantity += filteredProducts[i].Quantity;
-            }
+            Console.WriteLine($"\nCategory: {selectedCategory}");
+            // Use string.Join to concatenate product names separated by a comma
+            Console.WriteLine("Items: " + string.Join(", ", filteredProducts.Select(p => p.Name)));
+            // Calculate total cost and total quantity using LINQ.
+            double totalCost = filteredProducts.Sum(p => p.Price * p.Quantity);
+            int totalQuantity = filteredProducts.Sum(p => p.Quantity);
             // Print the total number of items and the total cost for the selected category
             Console.WriteLine($"\nTotal number of items: {totalQuantity}");
             Console.WriteLine($"Total cost of items: £{totalCost:F2}");
@@ -690,43 +687,46 @@ public class CharacterEncoder
     */
     public void RunCharacterEncoder()
     {
-        bool exit = false;
-        while (!exit)
+        try
         {
-            // Presenting the user with options to encode or exit
-            Console.WriteLine("\n" +
-            "Character Encoder:\n" +
-            "1. Encode a string\n" +
-            "2. Quit");
-
-            string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
-
-            switch (choice)
+            while (true)
             {
-                case "1": // Option to encode a string
-                    Console.WriteLine("Enter a string to encode:");
-                    string input = Console.ReadLine()?.Trim();
+                // Presenting the user with options to encode or exit
+                Console.WriteLine("\n" +
+                "Character Encoder:\n" +
+                "1. Encode a string\n" +
+                "2. Quit");
 
-                    if (string.IsNullOrEmpty(input)) // catch null or empty input from user
-                    {
-                        Console.WriteLine("Invalid input. Please enter a non-empty string.");
-                    }
-                    else
-                    {
-                        string encoded = EncodeString(input); // call our encoder if valid input from user
-                        Console.WriteLine($"Encoded string: {encoded}");
-                    }
-                    break;
+                string choice = Console.ReadLine()?.Trim(); // Remove any trailing white spaces
+                switch (choice)
+                {
+                    case "1": // Option to encode a string
+                        Console.WriteLine("Enter a string to encode:");
+                        string input = Console.ReadLine()?.Trim();
 
-                case "2": // Option to exit the character encoder
-                    Console.WriteLine("Exiting Character Encoder.");
-                    exit = true;
-                    break;
+                        if (string.IsNullOrEmpty(input)) // catch null or empty input from user
+                        {
+                            Console.WriteLine("Invalid input. Please enter a non-empty string.");
+                        }
+                        else
+                        {
+                            string encoded = EncodeString(input); // call our encoder if valid input from user
+                            Console.WriteLine($"Encoded string: {encoded}");
+                        }
+                        break;
 
-                default: //Invalid input, prompting user again
-                    Console.WriteLine("Invalid option. Please select 1 or 2.");
-                    break;
+                    case "2": // Option to exit the character encoder
+                        Console.WriteLine("Exiting Character Encoder.");
+                        return;
+                    default: //Invalid input, prompting user again
+                        Console.WriteLine("Invalid option. Please select 1 or 2.");
+                        break;
+                }
             }
+        }
+        catch (Exception ex) // ensure program is stable during runtime, catch and print any unexpected errors
+        {
+            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
         }
     }
 
@@ -812,10 +812,9 @@ public static class Utilities
     The categories parameter is a dictionary of category names and their associated lists.
     Prompts the user to choose from the available categories or exit.
     Returns the name of the selected category, or null if the user chooses to exit. */
-    public static string SelectCategory(Dictionary<string, List<string>> categories)
+    public static string SelectCategory(IReadOnlyDictionary<string, List<string>> categories)
     {
         Console.WriteLine("Select a category:");
-
         int index = 1;
         Dictionary<int, string> indexToCategoryMap = new Dictionary<int, string>();
 
@@ -850,8 +849,9 @@ public static class Utilities
     The category parameter is the name of the category from which the user wants to select a product.
     The productCategories parameter is a dictionary of categories with their associated products.
     Prompts the user to choose a product from the given category or list the available products again.
-    Returns the name of the selected product if found in the available products list. */
-    public static string SelectProduct(string category, Dictionary<string, List<string>> productCategories)
+    Returns the name of the selected product if found in the available products list. 
+    This function is used for both ProductsList class and EnergyCalculator class*/
+    public static string SelectProduct(string category, IReadOnlyDictionary<string, List<string>> productCategories)
     {
         // get the list of available products for the selected category
         List<string> availableProducts = productCategories[category];
@@ -866,27 +866,18 @@ public static class Utilities
             // prompt the user to enter the product name or type 'list' to see the products again
             Console.WriteLine("enter the product name (or type 'list' to see available products again):");
             string productName = Console.ReadLine()?.Trim();
+            
             // if the user types 'list', display the available products again
             if (productName.Equals("list", StringComparison.OrdinalIgnoreCase))
             {
-                foreach (string product in availableProducts)
+                foreach (string product in availableProducts) // loop through the list of available products and print each product
                 {
                     Console.WriteLine($"- {product}");
                 }
             }
-            bool productExists = false; // flag to indicate if the entered product name is valid
-            // iterate over available products to check for a match
-            foreach (var product in availableProducts)
+            else if (availableProducts.Any(product => product.Equals(productName, StringComparison.OrdinalIgnoreCase)))
             {
-                if (product.Equals(productName, StringComparison.OrdinalIgnoreCase))
-                {
-                    productExists = true; // set the flag to true if the product name matches
-                    break; // no need to keep iterating once a match is found
-                }
-            }
-            // if the product exists, return it
-            if (productExists)
-            {
+                // if a valid product name is found, return it
                 return productName;
             }
             else
@@ -898,6 +889,17 @@ public static class Utilities
     }
 }
 
+/* Dedicated utility class for our dictionaries which hold all our information. Placed in separate class in order to adhere to
+    the encapsulation and abstraction principles, ease of development and editing, and readability of the program. This class
+    utilizes private dictionaries with getters in order to decouple the dictionaries which can only be edited via code. justification
+    for this is as follows: either the program reads from an external file, or if the options are basic or limited (perhaps due to
+    development cycle constraints or future development), i have opted for this method. this method allows for the basic and sufficient
+    use of the program without having dictionaries be ridiculously long. this can be edited simply by inserting another value into the 
+    key that is categories. this method showcases important oop principles and neatly factors the code efficiently without the need for
+    an external file. i believe, unless the program because any larger in scale than what is shown, the use of external files are not strictly
+    necessary. static and readonly means code in other parts of the program will not be able to add to this so developers can exercise their
+    privilege to extend the programs scope for products.
+*/
 public static class ProductDataProvider
 {
     // Dictionary of categories with available products in each category
@@ -914,14 +916,13 @@ public static class ProductDataProvider
         { "Laundry & Cleaning Appliances", new List<string> { "Washing Machine", "Dryer", "Vacuum Cleaner", "Robot Vacuum", "Steam Cleaner", "Iron" } },
         { "Heating & Cooling Appliances", new List<string> { "Heater", "Air Conditioner", "Fan", "Humidifier", "Dehumidifier", "Air Purifier" } }
     };
-    // getter method to get product categories
-    public static Dictionary<string, List<string>> GetProductCategories()
+    // Provide methods to return read-only versions of the dictionaries
+    public static IReadOnlyDictionary<string, List<string>> GetProductCategories()
     {
-        return new Dictionary<string, List<string>>(productCategories);
+        return productCategories;
     }
-    // getter method to get appliance categories
-    public static Dictionary<string, List<string>> GetApplianceCategories()
+    public static IReadOnlyDictionary<string, List<string>> GetApplianceCategories()
     {
-        return new Dictionary<string, List<string>>(applianceCategories);
+        return applianceCategories;
     }
 }
